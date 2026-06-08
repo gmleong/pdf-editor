@@ -1,0 +1,110 @@
+name: 打包发布 (macOS + Windows)
+
+on:
+  push:
+    tags:
+      - 'v*'         # 打标签 v1.0, v1.1 等时自动打包
+  workflow_dispatch:  # 也可以手动触发
+
+jobs:
+
+  # ====== macOS: py2app 打包 ======
+  macos:
+    runs-on: macos-14  # Apple Silicon runner
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 设置 Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: 安装系统依赖
+        run: |
+          brew install pkg-config
+
+      - name: 安装 Python 依赖
+        run: |
+          pip install --upgrade pip
+          pip install py2app
+          pip install -r requirements.txt
+          pip list
+
+      - name: 打包 .app
+        run: |
+          python setup.py py2app --no-strip 2>&1
+
+      - name: 准备 DMG
+        run: |
+          # 安装 create-dmg 或直接用 hdiutil
+          ln -sf /Applications /tmp/Applications
+          # 改成只打包 .app
+          mkdir -p dist_dmg
+          cp -r "dist/PDF 编辑器.app" dist_dmg/
+          # 创建 DMG
+          hdiutil create -volname "PDF编辑器" \
+            -srcfolder dist_dmg \
+            -ov -format UDZO \
+            "PDF编辑器-macos.dmg"
+
+      - name: 上传 DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: PDF编辑器-macos
+          path: PDF编辑器-macos.dmg
+
+  # ====== Windows: PyInstaller 打包 ======
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 设置 Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: 安装 Python 依赖
+        shell: pwsh
+        run: |
+          pip install --upgrade pip
+          pip install pyinstaller
+          pip install -r requirements.txt
+          pip list
+
+      - name: 打包 .exe
+        shell: pwsh
+        run: |
+          pyinstaller --onefile --windowed --name "PDF编辑器" `
+            --distpath dist_exe `
+            main.py
+
+      - name: 上传 EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: PDF编辑器-windows
+          path: dist_exe/PDF编辑器.exe
+
+  # ====== 创建 Release ======
+  release:
+    needs: [macos, windows]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: 下载 macOS 产物
+        uses: actions/download-artifact@v4
+        with:
+          name: PDF编辑器-macos
+
+      - name: 下载 Windows 产物
+        uses: actions/download-artifact@v4
+        with:
+          name: PDF编辑器-windows
+
+      - name: 创建 Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            PDF编辑器-macos.dmg
+            PDF编辑器.exe
+          generate_release_notes: true

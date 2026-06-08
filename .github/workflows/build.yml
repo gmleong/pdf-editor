@@ -95,16 +95,37 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: PDF编辑器-macos
+          path: release_artifacts/
 
       - name: 下载 Windows 产物
         uses: actions/download-artifact@v4
         with:
           name: PDF编辑器-windows
+          path: release_artifacts/
 
       - name: 创建 Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            PDF编辑器-macos.dmg
-            PDF编辑器.exe
-          generate_release_notes: true
+            release_artifacts/PDF编辑器-macos.dmg
+            release_artifacts/PDF编辑器.exe
+          generate_release_notes: false
+          body: |
+            ## PDF 编辑器 v${{ github.ref_name }}
+
+            ### 功能
+            - 打开/查看 PDF 文件
+            - 原地文字编辑（点击文字直接编辑）
+            - 添加新文字
+            - 手写签名
+            - 插入图片/印章
+            - 页面管理（删除、旋转、插入空白页）
+            - 文字搜索替换
+            - 支持中文排版
+
+            ### 下载
+
+            | 平台 | 文件 |
+            |------|------|
+            | macOS | `PDF编辑器-macos.dmg` |
+            | Windows | `PDF编辑器.exe` |

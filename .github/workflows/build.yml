@@ -89,6 +89,8 @@ jobs:
   release:
     needs: [macos, windows]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - name: 下载 macOS 产物

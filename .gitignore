@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# macOS
+*.app
+.DS_Store
+
+# Py2app
+*.dmg
+
+# PyInstaller
+*.spec

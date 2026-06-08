@@ -1,0 +1,5 @@
+PyMuPDF>=1.26
+PyQt6>=6.10
+reportlab>=4.2
+pypdf>=6.0
+Pillow>=11.0
